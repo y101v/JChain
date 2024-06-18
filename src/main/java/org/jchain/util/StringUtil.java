@@ -1,8 +1,8 @@
-package org.example;
+package org.jchain.util;
+
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 public class StringUtil {
 
     public static String applySha256(String input) throws UnsupportedEncodingException, NoSuchAlgorithmException {
