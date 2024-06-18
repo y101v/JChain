@@ -3,36 +3,45 @@ package org.jchain.blockchain;
 import com.google.gson.GsonBuilder;
 import org.jchain.event.BlockEventListener;
 import org.jchain.event.BlockLogger;
+import org.jchain.util.StringUtil;
+
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Security;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.stream.IntStream;
 public class Main {
-    public static ArrayList<Block> blockchain = new ArrayList<>();
-    public static int difficulty = 6;
 
-    public static void main(String[] args) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        BlockEventListener eventListener = new BlockEventListener();
-        eventListener.registerObserver(new BlockLogger());
+    public static ArrayList<Block> blockchain = new ArrayList<Block>();
+    public static HashMap<String,TransactionOutput> UTXOs = new HashMap<String,TransactionOutput>(); //list of all unspent transactions.
+    public static int difficulty = 5;
+    public static Wallet walletA;
+    public static Wallet walletB;
 
-        // Add blocks to the blockchain
-        blockchain.add(new Block("Hi, I'm the first block", "0", eventListener));
-        System.out.println("Trying to Mine block 1...");
-        blockchain.get(0).mineBlock(difficulty);
+    public static void main(String[] args) {
+        // Setup Bouncy Castle as a Security Provider
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
-        blockchain.add(new Block("Yo, I'm the second block", blockchain.get(blockchain.size() - 1).hash, eventListener));
-        System.out.println("Trying to Mine block 2...");
-        blockchain.get(1).mineBlock(difficulty);
+        // Create the new wallets
+        walletA = new Wallet();
+        walletB = new Wallet();
 
-        blockchain.add(new Block("Hey, I'm the third block", blockchain.get(blockchain.size() - 1).hash, eventListener));
-        System.out.println("Trying to Mine block 3...");
-        blockchain.get(2).mineBlock(difficulty);
+        // Test public and private keys
+        System.out.println("Private key of walletA:");
+       // System.out.println(StringUtil.getStringFromKey(walletA.privateKey));
 
-        System.out.println("\nBlockchain is Valid: " + isChainValid());
+        System.out.println("Public key of walletA:");
+        System.out.println(StringUtil.getStringFromKey(walletA.publicKey));
 
-        String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
-        System.out.println("\nThe block chain: ");
-        System.out.println(blockchainJson);
+        // Create a test transaction from WalletA to walletB
+        Transaction transaction = new Transaction(walletA.publicKey, walletB.publicKey, 5, null);
+        transaction.generateSignature(walletA.privateKey);
+
+        // Verify the signature works and verify it from the public key
+        System.out.println("Is signature verified:");
+        System.out.println(transaction.verifiySignature());
     }
 
     public static boolean isChainValid() {
