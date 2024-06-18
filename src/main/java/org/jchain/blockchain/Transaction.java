@@ -48,7 +48,7 @@ public class Transaction {
         return StringUtil.verifyECDSASig(sender, data, signature);
     }
 
-    public boolean processTransaction() {
+    public boolean processTransaction() throws UnsupportedEncodingException, NoSuchAlgorithmException {
         if (verifiySignature() == false) {
             System.out.println("#Transaction Signature failed to verify");
             return false;

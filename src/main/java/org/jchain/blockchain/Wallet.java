@@ -34,13 +34,41 @@ public class Wallet {
             throw new RuntimeException(e);
         }
     }
-    // Example methods in Wallet class
-    public PrivateKey getPrivateKey() {
-        return privateKey;
+    public float getBalance() {
+        float total = 0;
+        for (Map.Entry<String, TransactionOutput> item: Main.UTXOs.entrySet()){
+            TransactionOutput UTXO = item.getValue();
+            if(UTXO.isMine(publicKey)) { //if output belongs to me ( if coins belong to me )
+                UTXOs.put(UTXO.id,UTXO); //add it to our list of unspent transactions.
+                total += UTXO.value ;
+            }
+        }
+        return total;
     }
 
-    public PublicKey getPublicKey() {
-        return publicKey;
+    public Transaction sendFunds(PublicKey _recipient,float value ) {
+        if(getBalance() < value) { //gather balance and check funds.
+            System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
+            return null;
+        }
+        //create array list of inputs
+        ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
+
+        float total = 0;
+        for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
+            TransactionOutput UTXO = item.getValue();
+            total += UTXO.value;
+            inputs.add(new TransactionInput(UTXO.id));
+            if(total > value) break;
+        }
+
+        Transaction newTransaction = new Transaction(publicKey, _recipient , value, inputs);
+        newTransaction.generateSignature(privateKey);
+
+        for(TransactionInput input: inputs){
+            UTXOs.remove(input.transactionOutputId);
+        }
+        return newTransaction;
     }
 
 }
